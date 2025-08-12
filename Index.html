@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Runaway Button</title>
+<!--
+Project: Runaway Button
+Description: A playful interactive button that “runs away” from your mouse cursor when you get too close.
+Perfect for adding a fun twist to any webpage or as a beginner-friendly JavaScript + CSS animation project.
+Try to catch it if you can! 🎯
+-->
+<style>
+  :root {
+    --radius: 18px;
+    --speed: 240;
+    --trigger: 150;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; height: 100dvh; display: grid; place-items: center;
+    background: linear-gradient(135deg, #ff0080, #7928ca, #2af598);
+    background-size: 400% 400%;
+    animation: gradientShift 8s ease infinite;
+    font-family: 'Segoe UI', sans-serif; color: #fff;
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .stage {
+    position: relative; width: min(92vw, 900px); height: min(70vh, 560px);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 24px; overflow: hidden;
+    background: rgba(0,0,0,0.3);
+    box-shadow: 0 20px 80px rgba(0,0,0,0.45);
+    backdrop-filter: blur(10px);
+  }
+  .hint {
+    position: absolute; inset: 16px auto auto 16px; opacity: .9; font-size: 14px;
+  }
+  button#runaway {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    padding: 14px 22px; border: 0; border-radius: var(--radius);
+    background: linear-gradient(45deg, #ff6a00, #ee0979);
+    color: #fff; font-weight: 700; letter-spacing: .3px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.4);
+    cursor: pointer; transition: transform .12s ease, background .3s ease, box-shadow .3s ease;
+  }
+  button#runaway:hover {
+    background: linear-gradient(45deg, #43cea2, #185a9d);
+    box-shadow: 0 12px 30px rgba(0,0,0,.5);
+  }
+  .pulse { position: absolute; inset: 0; pointer-events: none; }
+  .pulse::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 120px; height: 120px; transform: translate(-50%,-50%);
+    border-radius: 50%; border: 2px dashed rgba(255,255,255,0.4);
+    animation: ping 1.8s infinite;
+  }
+  @keyframes ping { 0% {transform:translate(-50%,-50%) scale(.8); opacity:.4} 80%{opacity:0} 100%{transform:translate(-50%,-50%) scale(1.2); opacity:0} }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="hint">💡 Tip: Try to click the button!</div>
+    <button id="runaway">Catch me</button>
+    <div class="pulse"></div>
+  </div>
+
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const btn = document.getElementById('runaway');
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+  function flee(mouseX, mouseY) {
+    const s = stage.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    const btnCX = b.left + b.width / 2;
+    const btnCY = b.top  + b.height / 2;
+    const dx = btnCX - mouseX;
+    const dy = btnCY - mouseY;
+    const dist = Math.hypot(dx, dy);
+    if (dist > parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--trigger'))) return;
+
+    const ux = dx / (dist || 1);
+    const uy = dy / (dist || 1);
+    const step = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--speed'));
+
+    const currentLeft = b.left - s.left;
+    const currentTop  = b.top  - s.top;
+
+    let nextLeft = currentLeft + ux * step;
+    let nextTop  = currentTop  + uy * step;
+
+    nextLeft = clamp(nextLeft, 6, s.width - b.width - 6);
+    nextTop  = clamp(nextTop,  6, s.height - b.height - 6);
+
+    btn.style.left = `${nextLeft + b.width/2}px`;
+    btn.style.top  = `${nextTop + b.height/2}px`;
+    btn.style.transform = `translate(-50%, -50%)`;
+  }
+
+  stage.addEventListener('mousemove', e => {
+    flee(e.clientX, e.clientY);
+  });
+
+  btn.addEventListener('click', () => {
+    btn.textContent = 'You got me! 🎉';
+    btn.style.background = 'linear-gradient(45deg, #00b09b, #96c93d)';
+  });
+
+  stage.addEventListener('touchstart', e => {
+    const s = stage.getBoundingClientRect();
+    const b = btn.getBoundingClientRect();
+    const pad = 8;
+    const newLeft = Math.random() * (s.width - b.width - pad*2) + pad;
+    const newTop  = Math.random() * (s.height - b.height - pad*2) + pad;
+    btn.style.left = `${newLeft + b.width/2}px`;
+    btn.style.top  = `${newTop + b.height/2}px`;
+    btn.style.transform = `translate(-50%, -50%)`;
+  }, { passive: true });
+
+  function center() {
+    const s = stage.getBoundingClientRect();
+    btn.style.left = `${s.width/2}px`;
+    btn.style.top  = `${s.height/2}px`;
+    btn.style.transform = `translate(-50%, -50%)`;
+  }
+  window.addEventListener('resize', center);
+  center();
+})();
+</script>
+</body>
+</html>
